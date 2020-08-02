@@ -4,38 +4,28 @@ class Species {
   AiCar champ;
   Population popul;
   float averageFitness = 0;
-  int staleness = 0;//how many generations the species has gone without an improvement
+  int staleness = 0;
   Genome rep;
-
-  //--------------------------------------------
-  //coefficients for testing compatibility 
   float excessCoeff = 1;
   float weightDiffCoeff = 0.5;
   float compatibilityThreshold = 3;
-  //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  //empty constructor
-
+ 
   Species() {
   }
 
 
-  //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ 
-  //constructor which takes in the player which belongs to the species
+  
   Species(AiCar p) {
     players.add(p); 
-    //since it is the only one in the species it is by default the best
     bestFitness = p.fitness; 
     rep = p.brain.clone();
     champ = p.clone();
   }
 
-  //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ 
-  //returns whether the parameter genome is in this species
   boolean sameSpecies(Genome g) {
     float compatibility;
-    float excessAndDisjoint = getExcessDisjoint(g, rep);//get the number of excess and disjoint genes between this player and the current species rep
-    float averageWeightDiff = averageWeightDiff(g, rep);//get the average weight difference between matching genes
-
+    float excessAndDisjoint = getExcessDisjoint(g, rep);
+    float averageWeightDiff = averageWeightDiff(g, rep);
 
     float largeGenomeNormaliser = g.genes.size() - 20;
     if (largeGenomeNormaliser<1) {
@@ -46,15 +36,10 @@ class Species {
     return (compatibilityThreshold > compatibility);
   }
 
-  //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ 
-  //add a player to the species
   void addToSpecies(AiCar p) {
     players.add(p);
   }
 
-  //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ 
-  //returns the number of excess and disjoint genes between the 2 input genomes
-  //i.e. returns the number of genes which dont match
   float getExcessDisjoint(Genome brain1, Genome brain2) {
     float matching = 0.0;
     for (int i =0; i <brain1.genes.size(); i++) {
@@ -65,10 +50,8 @@ class Species {
         }
       }
     }
-    return (brain1.genes.size() + brain2.genes.size() - 2*(matching));//return no of excess and disjoint genes
+    return (brain1.genes.size() + brain2.genes.size() - 2*(matching));
   }
-  //------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  //returns the avereage weight difference between matching genes in the input genomes
   float averageWeightDiff(Genome brain1, Genome brain2) {
     if (brain1.genes.size() == 0 || brain2.genes.size() ==0) {
       return 0;
@@ -86,18 +69,15 @@ class Species {
         }
       }
     }
-    if (matching ==0) {//divide by 0 error
+    if (matching ==0) {
       return 100;
     }
     return totalDiff/matching;
   }
-  //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  //sorts the species by fitness 
   void sortSpecies() {
 
     ArrayList<AiCar> temp = new ArrayList<AiCar>();
 
-    //selection short 
     for (int i = 0; i < players.size(); i ++) {
       float max = 0;
       int maxIndex = 0;
@@ -114,23 +94,20 @@ class Species {
 
     players = (ArrayList)temp.clone();
     if (players.size() == 0) {
-      print("fucking"); 
+      print("reproducing"); 
       staleness = 200;
       return;
     }
-    //if new best player
     if (players.get(0).fitness > bestFitness) {
       staleness = 0;
       bestFitness = players.get(0).fitness;
       rep = players.get(0).brain.clone();
       champ = players.get(0).clone();
-    } else {//if no new best player
+    } else {
       staleness ++;
     }
   }
 
-  //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  //simple stuff
   void setAverage() {
 
     float sum = 0;
@@ -139,20 +116,15 @@ class Species {
     }
     averageFitness = sum/players.size();
   }
-  //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-
-  //gets baby from the players in this species
   AiCar giveMeBaby(ArrayList<connectionHistory> innovationHistory) {
     AiCar baby;
-    if (random(1) < 0.25) {//25% of the time there is no crossover and the child is simply a clone of a random(ish) player
+    if (random(1) < 0.25) {
       baby =  selectPlayer().clone();
-    } else {//75% of the time do crossover 
+    } else {
 
-      //get 2 random(ish) parents 
       AiCar parent1 = selectPlayer();
       AiCar parent2 = selectPlayer();
 
-      //the crossover function expects the highest fitness parent to be the object and the lowest as the argument
       if (parent1.fitness < parent2.fitness) {
         baby =  parent2.crossover(parent1);
       } else {
@@ -163,8 +135,6 @@ class Species {
     return baby;
   }
 
-  //-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-  //selects a player based on it fitness
   AiCar selectPlayer() {
     float fitnessSum = 0;
     for (int i =0; i<players.size(); i++) {
@@ -180,11 +150,8 @@ class Species {
         return players.get(i);
       }
     }
-    //unreachable code to make the parser happy
     return players.get(0);
   }
-  //------------------------------------------------------------------------------------------------------------------------------------------
-  //kills off bottom half of the species
   void cull() {
     if (players.size() > 2) {
       for (int i = players.size()/2; i<players.size(); i++) {
@@ -193,8 +160,6 @@ class Species {
       }
     }
   }
-  //------------------------------------------------------------------------------------------------------------------------------------------
-  //in order to protect unique players, the fitnesses of each player is divided by the number of players in the species that that player belongs to 
   void fitnessSharing() {
     for (int i = 0; i< players.size(); i++) {
       players.get(i).fitness/=players.size();
